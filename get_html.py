@@ -78,7 +78,7 @@ def get_user_topic_page(userid):
     """
     登陆后访问用户主题页面
     :param userid: 用户id
-    :return: html页面 
+    :return: html页面
     """
     __cookie_filename, __cookie, __cookie_handler = get_cookie()
 
@@ -107,7 +107,7 @@ def get_user_topic_page(userid):
     return html
 
 
-def get_user_topic_dict(userid):
+def get_user_topic_lists(userid):
     html = get_user_topic_page(userid)
     bs = BeautifulSoup(html, 'html.parser')
 
@@ -116,7 +116,7 @@ def get_user_topic_dict(userid):
     for item in topic_tag_list:
         topic_list.append(item.string)
     # debug
-    print(len(topic_list))
+    # print(len(topic_list))
     print(topic_list)  # 用户一页35个帖子
 
     topic_url_list = []
@@ -129,9 +129,30 @@ def get_user_topic_dict(userid):
     for item in topic_time_tag_list:
         topic_time_list.append(item.string)
     print(topic_time_list)
+    return topic_list, topic_url_list, topic_time_list
+
+
+def save_user_list_to_file(userid):
+    topic_list, topic_url_list, topic_time_list = get_user_topic_lists(userid)
+    file_name = userid + ".txt"
+    f = open(file_name, 'w+')
+    for i in range(0, len(topic_list)):
+        # f.write(topic_list[i].strip() + "\t" + topic_url_list[i].strip() + "\t" + topic_time_list[i].strip() + "\n")
+        f.write(topic_list[i].strip() + "\t")
+    f.write("\n")
+
+    for i in range(0, len(topic_url_list)):
+        f.write(topic_url_list[i].strip() + "\t")
+    f.write("\n")
+
+    for i in range(0, len(topic_time_list)):
+        f.write(topic_time_list[i].strip() + "\t")
+    f.write("\n")
+    f.close
 
 
 if __name__ == '__main__':
-    get_user_topic_dict("1607961")
+    # get_user_topic_lists("1607961")  # 蓝湖， 燃灯122698
+    save_user_list_to_file("1607961")
     # get_user_topic_page("1607961")
     # read_cookie_string_file()
