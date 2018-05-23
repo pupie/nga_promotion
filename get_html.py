@@ -4,10 +4,12 @@
 # @Author  : caozhiye
 
 
-import gzip
+
 import json
 import random
 import urllib
+import os
+import gzip
 from http import cookiejar
 from urllib import parse
 from urllib import request
@@ -15,7 +17,6 @@ import time
 from time import sleep
 import datetime
 import sys
-import os
 from bs4 import BeautifulSoup
 import operator
 
@@ -128,7 +129,7 @@ def get_user_topic_lists(userid):
     :param userid: 用户ID
     :return: 返回用户主题列表，主题URL，主题发布时间
     """
-    print("get user topic list from web:")
+    print("get user topic list from web...")
     html = get_user_topic_page(userid)
     bs = BeautifulSoup(html, 'html.parser')
 
@@ -208,10 +209,10 @@ def read_user_list_from_file(userid):
     topic_time_list = [int(x) for x in topic_time_list]
     f.close()
     # debug
-    print("read user topic list from file:")
-    print(topic_list)
-    print(topic_url_list)
-    print(topic_time_list)
+    print("read user topic list from file...")
+    # print(topic_list)
+    # print(topic_url_list)
+    # print(topic_time_list)
     return topic_list, topic_url_list, topic_time_list
 
 
@@ -235,10 +236,10 @@ def check_if_new_topic(userid_list):
 
         if operator.eq(g_time_list, r_time_list):
             new_topic = False
-            print("No new topic.")
+            print("...No new topic...")
         else:
             new_topic = True
-            print("New topic found!")
+            print("===New topic found===")
 
     return new_topic
 
@@ -259,9 +260,8 @@ def format_push_message(userid_list):
         username_list.append(username)
         message_markdown_all = message_markdown_all + message_markdown + "\n" + "\n"
 
-    print(message_markdown_all)
     print(username_list)
-
+    print(message_markdown_all)
     return username_list, message_markdown_all
 
 
@@ -283,6 +283,8 @@ def push_new_message_serverchan(userid):
     username_string = ""
     for username in username_list:
         username_string = username_string + username + "，"
+    username_string = username_string[:-1]
+    # print(username_string)
 
     # https://sc.ftqq.com/SCUxxxxxxxxxxxxxxxxxxxxxxxxxxxx.send
     post_url = "https://sc.ftqq.com/" + serverchan_sckey + ".send"
@@ -300,6 +302,7 @@ def push_new_message_serverchan(userid):
         'Accept-Language': accept_language,
     }
 
+    print("Pushing messages to serverchan...")
     get_config_post_data = parse.urlencode(post_data).encode('utf-8')  # 使用urlencode方法转换标准格式
     req1 = request.Request(url=post_url, data=get_config_post_data, headers=head, method='POST')  # 创建Request对象
     resp1 = request.urlopen(req1)
@@ -314,6 +317,7 @@ def push_new_message_pushbear(userid):
     username_string = ""
     for username in username_list:
         username_string = username_string + username + "，"
+    username_string = username_string[:-1]
 
     # https://pushbear.ftqq.com/sub?sendkey={sendkey}&text={text}&desp={desp}
     post_url = "https://pushbear.ftqq.com/sub"
@@ -321,7 +325,7 @@ def push_new_message_pushbear(userid):
 
     post_data = {
         'sendkey': pushbear_sckey,
-        'text': "用户" + "\"" + username_string + "\"" + "有新帖子啦！",
+        'text': "您关注的用户：" + "\"" + username_string + "\"" + "有新帖子啦！",
         'desp': message
     }
 
@@ -331,7 +335,7 @@ def push_new_message_pushbear(userid):
         'Accept-Encoding': accept_encoding,
         'Accept-Language': accept_language,
     }
-
+    print("Pushing messages to pushbear...")
     get_config_post_data = parse.urlencode(post_data).encode('utf-8')  # 使用urlencode方法转换标准格式
     req1 = request.Request(url=post_url, data=get_config_post_data, headers=head, method='POST')  # 创建Request对象
     resp1 = request.urlopen(req1)
@@ -339,32 +343,33 @@ def push_new_message_pushbear(userid):
 
 if __name__ == '__main__':
     # 蓝湖1607961， 燃灯122698
-    # while 1:
-    #     ctime = datetime.datetime.now()
-    #     hour = ctime.hour
-    #     minute = ctime.minute
-    #     second = ctime.second
-    #     stime = str(ctime)
-    #     # sys.stdout.write(stime + '\n')
-    #     # sys.stdout.flush()
-    #     # sleep(0.1)
-    #     # os.system('cls')
-    #     # print (second)
-    #
-    #     if minute % 2 == 0 and second == 0:
-    #         sleep(3)
-    #         sys.stdout.write(stime + "\t")
-    #         print("start check user topics.")
-    #         if_new_topic = check_if_new_topic("1607961")
-    #
-    #         if if_new_topic:
-    #             push_new_message_serverchan("1607961")
+    while 1:
+        ctime = datetime.datetime.now()
+        hour = ctime.hour
+        minute = ctime.minute
+        second = ctime.second
+        stime = str(ctime)
+        # sys.stdout.write(stime + '\n')
+        # sys.stdout.flush()
+        # sleep(0.1)
+        # os.system('cls')
+        # print(second)
+
+        if minute % 2 == 0 and second == 0:
+            sleep(3)
+            sys.stdout.write(stime + "\t")
+            print("start check user topics.")
+            if_new_topic = check_if_new_topic((1607961, 122698))
+
+            if if_new_topic:
+                push_new_message_serverchan((1607961, 122698))
+                # push_new_message_pushbear((1607961, 122698))
 
     # check_if_new_topic("1607961")
     # get_user_topic_lists("1607961")
     # save_user_list_to_file("1607961")
     # read_user_list_from_file("1607961")
     # check_if_new_topic((1607961, 122698))
-    format_push_message((1607961, 122698))
-    push_new_message_serverchan((1607961, 122698))
-    # push_new_message_pushbear("1607961")
+    # format_push_message((1607961, 122698))
+    # push_new_message_serverchan((1607961, 122698))
+    # push_new_message_pushbear((1607961, 122698))
