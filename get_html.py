@@ -359,7 +359,7 @@ if __name__ == '__main__':
             sys.stdout.write(stime + "\t")
             print("start check user topics.")
             if_new_topic = check_if_new_topic((1607961, 122698))
-            print(if_new_topic)
+            # print(if_new_topic)
             if if_new_topic:
                 push_new_message_serverchan((1607961, 122698))
                 # push_new_message_pushbear((1607961, 122698))
