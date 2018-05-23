@@ -4,7 +4,6 @@
 # @Author  : caozhiye
 
 
-
 import json
 import random
 import urllib
@@ -240,7 +239,7 @@ def check_if_new_topic(userid_list):
         else:
             new_topic = True
             print("===New topic found===")
-
+            break
     return new_topic
 
 
@@ -288,7 +287,7 @@ def push_new_message_serverchan(userid):
 
     # https://sc.ftqq.com/SCUxxxxxxxxxxxxxxxxxxxxxxxxxxxx.send
     post_url = "https://sc.ftqq.com/" + serverchan_sckey + ".send"
-    print(post_url)
+    # print(post_url)
 
     post_data = {
         'text': "您关注的用户：" + "\"" + username_string + "\"" + "有新帖子啦！",
@@ -360,7 +359,7 @@ if __name__ == '__main__':
             sys.stdout.write(stime + "\t")
             print("start check user topics.")
             if_new_topic = check_if_new_topic((1607961, 122698))
-
+            print(if_new_topic)
             if if_new_topic:
                 push_new_message_serverchan((1607961, 122698))
                 # push_new_message_pushbear((1607961, 122698))
