@@ -104,7 +104,8 @@ def get_user_topic_page(userid):
         'Cookie': read_cookie_string_file()
     }
 
-    get_url = user_base_url + userid
+    get_url = user_base_url + str(userid)
+    # print (get_url)
     opener = request.build_opener(__cookie_handler)  # 通过CookieHandler创建opener
     req1 = request.Request(url=get_url, headers=head, method='GET')  # 创建Request对象
     __response = opener.open(req1)
@@ -163,7 +164,7 @@ def save_user_list_to_file(userid):
     :param userid: 用户ID
     """
     username, topic_list, topic_url_list, topic_time_list = get_user_topic_lists(userid)
-    file_name = userid + ".txt"
+    file_name = str(userid) + ".txt"
     f = open(file_name, 'w+')
     for i in range(0, len(topic_list) - 1):
         # f.write(topic_list[i].strip() + "\t" + topic_url_list[i].strip() + "\t" + topic_time_list[i].strip() + "\n")
@@ -181,6 +182,7 @@ def save_user_list_to_file(userid):
     f.write(str(topic_time_list[-1]))
     f.write("\n")
     f.close
+    return username, topic_list, topic_url_list, topic_time_list
 
 
 def read_user_list_from_file(userid):
@@ -189,12 +191,13 @@ def read_user_list_from_file(userid):
     :param userid: 用户ID
     :return: 返回用户主题列表，主题URL，主题发布时间
     """
-    file_name = userid + ".txt"
+    file_name = str(userid) + ".txt"
     try:
         open(file_name, 'r')
     except FileNotFoundError:
         print("No user file found, will create one.")
         save_user_list_to_file(userid)
+        print("New user topic list saved!")
 
     f = open(file_name, 'r')
     get = f.read()
@@ -212,45 +215,54 @@ def read_user_list_from_file(userid):
     return topic_list, topic_url_list, topic_time_list
 
 
-def check_if_new_topic(userid):
+def check_if_new_topic(userid_list):
     """
      检查该用户是否有新主题发布
     :param userid: 用户ID
     :return: 布尔值
     """
-    username, g_topic_list, g_topic_url_list, g_topic_time_list = get_user_topic_lists(userid)
-    r_topic_list, r_topic_url_list, r_topic_time_list = read_user_list_from_file(userid)
-    g_time_list = sorted(g_topic_time_list, reverse=True)
-    r_time_list = sorted(r_topic_time_list, reverse=True)
-    # debug
-    # print("compare lists:")
-    # print(g_time_list)
-    # print(r_time_list)
+    new_topic = None
+    for userid in userid_list:
+        print("start check user topic for user:", userid)
+        r_topic_list, r_topic_url_list, r_topic_time_list = read_user_list_from_file(userid)
+        username, g_topic_list, g_topic_url_list, g_topic_time_list = save_user_list_to_file(userid)
+        g_time_list = sorted(g_topic_time_list, reverse=True)
+        r_time_list = sorted(r_topic_time_list, reverse=True)
+        # debug
+        # print("compare lists:")
+        # print(g_time_list)
+        # print(r_time_list)
 
-    if operator.eq(g_time_list, r_time_list):
-        new_topic = False
-        print("No new topic.")
-    else:
-        new_topic = True
-        print("New topic found!")
+        if operator.eq(g_time_list, r_time_list):
+            new_topic = False
+            print("No new topic.")
+        else:
+            new_topic = True
+            print("New topic found!")
 
     return new_topic
 
 
-def format_push_message(userid):
-    username, g_topic_list, g_topic_url_list, g_topic_time_list = get_user_topic_lists(userid)
-
+def format_push_message(userid_list):
+    username_list = []
+    message_markdown_all = ""
     print("formatting markdown message:")
-    message_markdown = ""
-    message_body_head = "该用户的最近的10个帖子为：" + "\n"
-    for i in range(0, 10):
-        message_markdown = message_markdown + "1. " + "[" + g_topic_list[i] + "]" + "(" + g_topic_url_list[
-            i] + ")" + "\t" + "\t" + timestamp_datetime(g_topic_time_list[i]) + "\n"
+    for user in userid_list:
+        username, g_topic_list, g_topic_url_list, g_topic_time_list = get_user_topic_lists(user)
+        message_markdown = ""
+        message_body_head = "用户" + "\"" + username + "\"" + "的最近的10个帖子为：" + "\n"
+        for i in range(0, 10):
+            message_markdown = message_markdown + "1. " + "[" + g_topic_list[i] + "]" + "(" + g_topic_url_list[
+                i] + ")" + "\t" + "\t" + timestamp_datetime(g_topic_time_list[i]) + "\n"
 
-    message_markdown = message_body_head + message_markdown
-    print(message_markdown)
+        message_markdown = message_body_head + message_markdown
+        username_list.append(username)
+        message_markdown_all = message_markdown_all + message_markdown + "\n" + "\n"
 
-    return username, message_markdown
+    print(message_markdown_all)
+    print(username_list)
+
+    return username_list, message_markdown_all
 
 
 def get_key_from_file(filename):
@@ -267,13 +279,17 @@ def get_key_from_file(filename):
 
 def push_new_message_serverchan(userid):
     serverchan_sckey = get_key_from_file("serverchan_key")
-    username, message = format_push_message(userid)
+    username_list, message = format_push_message(userid)
+    username_string = ""
+    for username in username_list:
+        username_string = username_string + username + "，"
+
     # https://sc.ftqq.com/SCUxxxxxxxxxxxxxxxxxxxxxxxxxxxx.send
     post_url = "https://sc.ftqq.com/" + serverchan_sckey + ".send"
     print(post_url)
 
     post_data = {
-        'text': "用户" + "\"" + username + "\"" + "有新帖子啦！",
+        'text': "您关注的用户：" + "\"" + username_string + "\"" + "有新帖子啦！",
         'desp': message
     }
 
@@ -292,14 +308,20 @@ def push_new_message_serverchan(userid):
 
 def push_new_message_pushbear(userid):
     pushbear_sckey = get_key_from_file("pushbear_key")
-    username, message = format_push_message(userid)
+    username_list, message = format_push_message(userid)
+
+    username_list, message = format_push_message(userid)
+    username_string = ""
+    for username in username_list:
+        username_string = username_string + username + "，"
+
     # https://pushbear.ftqq.com/sub?sendkey={sendkey}&text={text}&desp={desp}
     post_url = "https://pushbear.ftqq.com/sub"
     print(post_url)
 
     post_data = {
         'sendkey': pushbear_sckey,
-        'text': "用户" + "\"" + username + "\"" + "有新帖子啦！",
+        'text': "用户" + "\"" + username_string + "\"" + "有新帖子啦！",
         'desp': message
     }
 
@@ -317,33 +339,32 @@ def push_new_message_pushbear(userid):
 
 if __name__ == '__main__':
     # 蓝湖1607961， 燃灯122698
-    while 1:
-
-        ctime = datetime.datetime.now()
-        hour = ctime.hour
-        minute = ctime.minute
-        second = ctime.second
-        stime = str(ctime)
-        # sys.stdout.write(stime + '\n')
-        # sys.stdout.flush()
-        # sleep(0.1)
-        # os.system('cls')
-        # print (second)
-
-        if minute % 2 == 0 and second == 0:
-            sleep(3)
-            sys.stdout.write(stime + "\t")
-            print("start check user topics.")
-            if_new_topic = check_if_new_topic("1607961")
-
-            if if_new_topic:
-                push_new_message_serverchan("1607961")
+    # while 1:
+    #     ctime = datetime.datetime.now()
+    #     hour = ctime.hour
+    #     minute = ctime.minute
+    #     second = ctime.second
+    #     stime = str(ctime)
+    #     # sys.stdout.write(stime + '\n')
+    #     # sys.stdout.flush()
+    #     # sleep(0.1)
+    #     # os.system('cls')
+    #     # print (second)
+    #
+    #     if minute % 2 == 0 and second == 0:
+    #         sleep(3)
+    #         sys.stdout.write(stime + "\t")
+    #         print("start check user topics.")
+    #         if_new_topic = check_if_new_topic("1607961")
+    #
+    #         if if_new_topic:
+    #             push_new_message_serverchan("1607961")
 
     # check_if_new_topic("1607961")
     # get_user_topic_lists("1607961")
     # save_user_list_to_file("1607961")
     # read_user_list_from_file("1607961")
-    # check_if_new_topic("1607961")
-    # format_push_message("1607961")
-    # push_new_message_serverchan("1607961")
+    # check_if_new_topic((1607961, 122698))
+    format_push_message((1607961, 122698))
+    push_new_message_serverchan((1607961, 122698))
     # push_new_message_pushbear("1607961")
