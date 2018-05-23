@@ -193,6 +193,7 @@ def read_user_list_from_file(userid):
     try:
         open(file_name, 'r')
     except FileNotFoundError:
+        print("No user file found, will create one.")
         save_user_list_to_file(userid)
 
     f = open(file_name, 'r')
@@ -314,13 +315,35 @@ def push_new_message_pushbear(userid):
     resp1 = request.urlopen(req1)
 
 
-
 if __name__ == '__main__':
     # 蓝湖1607961， 燃灯122698
+    while 1:
+
+        ctime = datetime.datetime.now()
+        hour = ctime.hour
+        minute = ctime.minute
+        second = ctime.second
+        stime = str(ctime)
+        # sys.stdout.write(stime + '\n')
+        # sys.stdout.flush()
+        # sleep(0.1)
+        # os.system('cls')
+        # print (second)
+
+        if minute % 2 == 0 and second == 0:
+            sleep(3)
+            sys.stdout.write(stime + "\t")
+            print("start check user topics.")
+            if_new_topic = check_if_new_topic("1607961")
+
+            if if_new_topic:
+                push_new_message_serverchan("1607961")
+
+    # check_if_new_topic("1607961")
     # get_user_topic_lists("1607961")
     # save_user_list_to_file("1607961")
     # read_user_list_from_file("1607961")
     # check_if_new_topic("1607961")
-    format_push_message("1607961")
+    # format_push_message("1607961")
     # push_new_message_serverchan("1607961")
     # push_new_message_pushbear("1607961")

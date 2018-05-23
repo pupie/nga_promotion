@@ -1,4 +1,6 @@
 .idea
+serverchan_key.txt
+pushbear_key.txt
 cookie.txt
 cookie_string.txt
 .pytest_cache
