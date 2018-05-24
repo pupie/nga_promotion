@@ -362,7 +362,8 @@ if __name__ == '__main__':
             # print(if_new_topic)
             if if_new_topic:
                 push_new_message_serverchan((1607961, 122698))
-                # push_new_message_pushbear((1607961, 122698))
+                sleep(3)
+                push_new_message_pushbear((1607961, 122698))
 
     # check_if_new_topic("1607961")
     # get_user_topic_lists("1607961")
