@@ -106,19 +106,23 @@ def get_user_topic_page(userid):
 
     get_url = user_base_url + str(userid)
     # print (get_url)
-    opener = request.build_opener(__cookie_handler)  # 通过CookieHandler创建opener
-    req1 = request.Request(url=get_url, headers=head, method='GET')  # 创建Request对象
-    __response = opener.open(req1)
+    html = ""
+    try:
+        opener = request.build_opener(__cookie_handler)  # 通过CookieHandler创建opener
+        req1 = request.Request(url=get_url, headers=head, method='GET')  # 创建Request对象
+        __response = opener.open(req1)
+        __cookie.save(__cookie_filename, ignore_discard=True, ignore_expires=True)
 
-    __cookie.save(__cookie_filename, ignore_discard=True, ignore_expires=True)
+        result = __response.read()  # 从response对象读取result结果二进制流
+        html_byte = gzip.decompress(result)
+        # import chardet
+        # detect_result = chardet.detect(html_byte)
+        # print(detect_result)
+        html = html_byte.decode("gbk")
+    except:
+        print("!!!Error in reading user topic page!!!")
 
-    result = __response.read()  # 从response对象读取result结果二进制流
-    html_byte = gzip.decompress(result)
-    # import chardet
-    # detect_result = chardet.detect(html_byte)
-    # print(detect_result)
-    html = html_byte.decode("gbk")
-    # print(html)
+    # print("html=", html)
     return html
 
 
@@ -130,8 +134,12 @@ def get_user_topic_lists(userid):
     """
     print("get user topic list from web...")
     html = get_user_topic_page(userid)
-    bs = BeautifulSoup(html, 'html.parser')
+    if html == "":
+        username = "网络异常"
+        topic_list, topic_url_list, topic_time_list = read_user_list_from_file(userid)
+        return username, topic_list, topic_url_list, topic_time_list
 
+    bs = BeautifulSoup(html, 'html.parser')
     username_tag_list = bs.select('a[class="author"]')  # 用户名
     username = username_tag_list[0].string
     print(username)
@@ -353,7 +361,7 @@ if __name__ == '__main__':
         # sleep(0.1)
         # os.system('cls')
         # print(second)
-
+        # if second == 0:
         if minute % 2 == 0 and second == 0:
             sleep(3)
             sys.stdout.write(stime + "\t")
@@ -365,7 +373,7 @@ if __name__ == '__main__':
                 sleep(3)
                 push_new_message_pushbear((1607961, 122698))
 
-    # check_if_new_topic("1607961")
+    # check_if_new_topic((1607961, 122698))
     # get_user_topic_lists("1607961")
     # save_user_list_to_file("1607961")
     # read_user_list_from_file("1607961")
