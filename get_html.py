@@ -38,6 +38,11 @@ cookie = r'your_cookie_string'
 
 
 def timestamp_datetime(value):
+    """
+    将unix时间戳转换成可读格式
+    :param value:
+    :return:
+    """
     format = '%Y-%m-%d %H:%M:%S'
     # value为传入的值为时间戳(整形)，如：1332888820
     value = time.localtime(value)
@@ -79,6 +84,10 @@ def get_cookie_value(name):
 
 
 def read_cookie_string_file():
+    """
+    从文件读取cookie数据用以登录
+    :return: cookie字符串
+    """
     cookie_file = "cookie_string.txt"
     f = open(cookie_file, 'r', encoding="utf-8")
     cookie_line = ""
@@ -251,6 +260,11 @@ def check_if_new_topic(userid_list):
 
 
 def format_push_message(userid_list):
+    """
+    格式化推送消息主体
+    :param userid_list: 用户ID列表
+    :return:消息主体
+    """
     username_list = []
     message_markdown_all = ""
     print("formatting markdown message:")
@@ -272,6 +286,11 @@ def format_push_message(userid_list):
 
 
 def get_key_from_file(filename):
+    """
+    从文件读取推送秘钥
+    :param filename: 文件名
+    :return:秘钥
+    """
     file = filename + ".txt"
     f = open(file, 'r')
     get = f.read()
@@ -284,6 +303,11 @@ def get_key_from_file(filename):
 
 
 def push_new_message_serverchan(userid):
+    """
+    一对一推送新消息至serverchan
+    :param userid: 用户id
+    :return:
+    """
     serverchan_sckey = get_key_from_file("serverchan_key")
     username_list, message = format_push_message(userid)
     username_string = ""
@@ -316,6 +340,11 @@ def push_new_message_serverchan(userid):
 
 
 def push_new_message_pushbear(userid):
+    """
+    一对多推送新消息至pushbear
+    :param userid: 用户id
+    :return:
+    """
     pushbear_sckey = get_key_from_file("pushbear_key")
     username_list, message = format_push_message(userid)
 
@@ -348,6 +377,11 @@ def push_new_message_pushbear(userid):
 
 
 def read_user_form_file(user_file):
+    """
+    从文件读取关注的用户列表
+    :param user_file: 文件名，每一个用户ID占一行
+    :return:用户ID数值列表
+    """
     file_name = user_file + ".txt"
     try:
         open(file_name, 'r')
@@ -367,6 +401,11 @@ def read_user_form_file(user_file):
 
 
 def start_job(user_file):
+    """
+    开始检测任务
+    :param user_file: 用户文件
+    :return:
+    """
     while 1:
         ctime = datetime.datetime.now()
         hour = ctime.hour
