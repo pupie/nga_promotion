@@ -175,7 +175,6 @@ def save_user_list_to_file(userid):
     file_name = str(userid) + ".txt"
     f = open(file_name, 'w+')
     for i in range(0, len(topic_list) - 1):
-        # f.write(topic_list[i].strip() + "\t" + topic_url_list[i].strip() + "\t" + topic_time_list[i].strip() + "\n")
         f.write(topic_list[i].strip() + "\t")
     f.write(topic_list[-1])
     f.write("\n")
@@ -348,8 +347,26 @@ def push_new_message_pushbear(userid):
     resp1 = request.urlopen(req1)
 
 
-if __name__ == '__main__':
-    # 蓝湖1607961， 燃灯122698
+def read_user_form_file(user_file):
+    file_name = user_file + ".txt"
+    try:
+        open(file_name, 'r')
+    except FileNotFoundError:
+        print("!!!No list file found!!!")
+
+    f = open(file_name, 'r')
+    get = f.read()
+    user_list = get.split("\n")
+    while '' in user_list:
+        user_list.remove('')
+
+    user_list = [int(x) for x in user_list]
+    f.close()
+    print(user_list)
+    return user_list
+
+
+def start_job(user_file):
     while 1:
         ctime = datetime.datetime.now()
         hour = ctime.hour
@@ -365,14 +382,20 @@ if __name__ == '__main__':
         if minute % 2 == 0 and second == 0:
             sleep(3)
             sys.stdout.write(stime + "\t")
-            print("start check user topics.")
-            if_new_topic = check_if_new_topic((1607961, 122698))
+            print("start checking user topics...")
+            user_list = read_user_form_file(user_file)
+            if_new_topic = check_if_new_topic(user_list)
             # print(if_new_topic)
             if if_new_topic:
-                push_new_message_serverchan((1607961, 122698))
+                push_new_message_serverchan(user_list)
                 sleep(3)
-                push_new_message_pushbear((1607961, 122698))
+                push_new_message_pushbear(user_list)
 
+
+if __name__ == '__main__':
+    start_job("nga_user")
+
+    # 蓝湖1607961， 燃灯122698
     # check_if_new_topic((1607961, 122698))
     # get_user_topic_lists("1607961")
     # save_user_list_to_file("1607961")
