@@ -4,20 +4,17 @@
 # @Author  : caozhiye
 
 
-import json
-import random
-import urllib
-import os
+import datetime
 import gzip
+import operator
+import sys
+import time
 from http import cookiejar
+from time import sleep
 from urllib import parse
 from urllib import request
-import time
-from time import sleep
-import datetime
-import sys
+
 from bs4 import BeautifulSoup
-import operator
 
 # 登录URL
 base_url = 'http://bbs.ngacn.cc/'
@@ -43,13 +40,13 @@ def timestamp_datetime(value):
     :param value:
     :return:
     """
-    format = '%Y-%m-%d %H:%M:%S'
+    date_format = '%Y-%m-%d %H:%M:%S'
     # value为传入的值为时间戳(整形)，如：1332888820
     value = time.localtime(value)
     # 经过localtime转换后变成
     # time.struct_time(tm_year=2012, tm_mon=3, tm_mday=28, tm_hour=6, tm_min=53, tm_sec=40, tm_wday=2, tm_yday=88, tm_isdst=0)
     # 最后再经过strftime函数转换为正常日期格式。
-    dt = time.strftime(format, value)
+    dt = time.strftime(date_format, value)
     # print(dt)
     return dt
 
@@ -128,8 +125,8 @@ def get_user_topic_page(userid):
         # detect_result = chardet.detect(html_byte)
         # print(detect_result)
         html = html_byte.decode("gbk")
-    except:
-        print("!!!Error in reading user topic page!!!")
+    except Exception as e:
+        print("!!!Error in reading user topic page!!!:", e)
 
     # print("html=", html)
     return html
@@ -197,7 +194,7 @@ def save_user_list_to_file(userid):
         f.write(str(topic_time_list[i]) + "\t")
     f.write(str(topic_time_list[-1]))
     f.write("\n")
-    f.close
+    f.close()
     return username, topic_list, topic_url_list, topic_time_list
 
 
@@ -217,11 +214,18 @@ def read_user_list_from_file(userid):
 
     f = open(file_name, 'r')
     get = f.read()
-    line_list = get.split("\n")
-    topic_list = line_list[0].split("\t")
-    topic_url_list = line_list[1].split("\t")
-    topic_time_list = line_list[2].split("\t")
-    topic_time_list = [int(x) for x in topic_time_list]
+    topic_list = []
+    topic_url_list = []
+    topic_time_list = []
+    # topic_time_list = []
+    try:
+        line_list = get.split("\n")
+        topic_list = line_list[0].split("\t")
+        topic_url_list = line_list[1].split("\t")
+        topic_time_list = line_list[2].split("\t")
+        topic_time_list = [int(x) for x in topic_time_list]
+    except Exception as e:
+        print("Error in reading list from file!!!:", e)
     f.close()
     # debug
     print("read user topic list from file...")
@@ -234,7 +238,7 @@ def read_user_list_from_file(userid):
 def check_if_new_topic(userid_list):
     """
      检查该用户是否有新主题发布
-    :param userid: 用户ID
+    :param userid_list: 用户ID
     :return: 布尔值
     """
     new_topic = None
@@ -346,8 +350,6 @@ def push_new_message_pushbear(userid):
     :return:
     """
     pushbear_sckey = get_key_from_file("pushbear_key")
-    username_list, message = format_push_message(userid)
-
     username_list, message = format_push_message(userid)
     username_string = ""
     for username in username_list:
